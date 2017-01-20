@@ -495,9 +495,9 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
             if (action == GLFW_RELEASE) {
                 rectangle_rot_dir *= -1;
                 if (pan_drag)
-                    pan_drag = false;
+                pan_drag = false;
             }
-            if (action = GLFW_PRESS)
+            if (action == GLFW_PRESS)
             {
                 pan_drag = true;
                 mousePanX = mouseX;
