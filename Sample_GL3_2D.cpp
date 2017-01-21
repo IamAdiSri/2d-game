@@ -205,6 +205,11 @@ float rectangle_rot_dir = 1;
 bool triangle_rot_status = true;
 bool rectangle_rot_status = true;
 
+const int success = 10;
+int score, oldScore;
+int lives, oldLives;
+bool gameOver;
+
 const float turretPOSX = -3.75;
 float turretPOSY = 0.0;
 float turretROT = 0.0;
@@ -251,7 +256,7 @@ void collision_mirror(float xm, float ym, float am, int bullet_ind)
     if (distance <= 0.05)
     {
         distance = sqrt(pow((xm-bullets[bullet_ind].x), 2) + pow((ym-bullets[bullet_ind].y), 2));
-        if (distance < MIRROR_W - 0.2)
+        if (distance < MIRROR_W - 0.3)
             bullets[bullet_ind].rot = 2*am - bullets[bullet_ind].rot;
     }
     // cout << distance << endl;
@@ -264,6 +269,10 @@ bool collision(float x1, float y1, float h1, float w1, float x2, float y2, float
 
 void init_bricks()
 {
+    while(bricks.size() > 0)
+    {
+        bricks.erase(bricks.begin());
+    }
     for (int i = 0; i < TOTAL_BRICKS; i++)
     {
         brick temp;
@@ -284,6 +293,25 @@ void init_bricks()
     }
 }
 
+void init_mirrors() // sets an angle at random from 45 to 135 deg on the x-axis
+{
+    mirror1_rot = ( rand() % 90 ) + 45;
+    mirror2_rot = ( rand() % 90 ) + 45;
+    mirror3_rot = ( rand() % 90 ) + 45;
+    mirror4_rot = ( rand() % 90 ) + 45;
+
+    // cout << mirror1_rot << " " << mirror2_rot << " " << mirror3_rot << " " << mirror4_rot << endl;
+}
+
+void init_game()
+{
+    init_bricks(); // Initialises vector with the bricks
+    init_mirrors(); // Inititalises mirrors at random angles
+    gameOver = false;
+    score = 0;
+    lives = 3;
+}
+
 void init_bullet()
 {
     new_shot_time = glfwGetTime();
@@ -297,16 +325,6 @@ void init_bullet()
         temp.rot = turretROT;
         bullets.push_back(temp);
     }
-}
-
-void init_mirrors() // sets an angle at random from 45 to 135 deg on the x-axis
-{
-    mirror1_rot = ( rand() % 90 ) + 45;
-    mirror2_rot = ( rand() % 90 ) + 45;
-    mirror3_rot = ( rand() % 90 ) + 45;
-    mirror4_rot = ( rand() % 90 ) + 45;
-
-    // cout << mirror1_rot << " " << mirror2_rot << " " << mirror3_rot << " " << mirror4_rot << endl;
 }
 
 bool pan(int direction) // -1: left, 1: right
@@ -372,6 +390,10 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
                 break;
             case GLFW_KEY_X:
                 // do something ..
+                break;
+            case GLFW_KEY_ENTER:
+                if (gameOver)
+                    init_game();
                 break;
             default:
                 break;
@@ -876,6 +898,25 @@ void draw ()
 
   /* Render your scene */
 
+  // GAME CONTROL
+  if (gameOver)
+    return;
+  if (oldScore != score || oldLives != lives)
+  {
+      cout << "score: " << score << " lives: " << lives << endl;
+      oldScore = score;
+      oldLives = lives;
+  }
+  if (lives == 0)
+  {
+      cout << "GAME OVER" << endl << "Final Score: " << score << endl;
+      cout << "Press ENTER to start new game; press Q to quit" << endl;
+      cout << "----------------------------------------------" << endl;
+      cout << "______________________________________________" << endl;
+      gameOver = true;
+  }
+  
+
   // PANNING
   if (pan_drag)
   {
@@ -978,6 +1019,10 @@ void draw ()
                   if (collision(bullets[i].x, bullets[i].y, BULLET_H, BULLET_W, bricks[j].x, bricks[j].y, BRICK_H, BRICK_W))
                   {
                     bullets[i].active = bricks[j].active = false;
+                    if (bricks[j].color == 2)
+                        score += success;
+                    else
+                        lives--;
                   }
               }
 
@@ -1033,6 +1078,7 @@ void draw ()
   // BRICK
   for (int i = 0; i < bricks.size(); i++)
   {
+    //   cout << endl << bricks.size() << endl;
       if ((bricks[i]).active)
       {
           Matrices.model = glm::mat4(1.0f);
@@ -1058,11 +1104,32 @@ void draw ()
 
           (bricks[i]).y -= BRICK_SPEED;
           if ((bricks[i]).y <= -4.5) // Brick escapes lower boundary
+          {
               (bricks[i]).active = false;
+              lives--;
+          }
+          else if (collision(redBucketPOSX, bucketPOSY, BUCKET_H, BUCKET_W, bricks[i].x, bricks[i].y, BRICK_H, BRICK_W) && collision(grnBucketPOSX, bucketPOSY, BUCKET_H, BUCKET_W, bricks[i].x, bricks[i].y, BRICK_H, BRICK_W)) // brick collides with both buckets
+                continue;
           else  if (bricks[i].color == 0 && collision(redBucketPOSX, bucketPOSY, BUCKET_H, BUCKET_W, bricks[i].x, bricks[i].y, BRICK_H, BRICK_W)) // red brick collides with red bucket
+          {
                 (bricks[i]).active = false;
+                score += success;
+          }
+          else  if ((bricks[i].color == 0 || bricks[i].color == 2) && collision(grnBucketPOSX, bucketPOSY, BUCKET_H, BUCKET_W, bricks[i].x, bricks[i].y, BRICK_H, BRICK_W)) // red or black brick collides with grn bucket
+          {
+                (bricks[i]).active = false;
+                lives--;
+          }
           else if (bricks[i].color == 1 && collision(grnBucketPOSX, bucketPOSY, BUCKET_H, BUCKET_W, bricks[i].x, bricks[i].y, BRICK_H, BRICK_W)) // green brick collides with green bucket
+          {
                 (bricks[i]).active = false;
+                score += success;
+          }
+          else if ((bricks[i].color == 1 || bricks[i].color == 2) && collision(redBucketPOSX, bucketPOSY, BUCKET_H, BUCKET_W, bricks[i].x, bricks[i].y, BRICK_H, BRICK_W)) // green or black brick collides with red bucket
+          {
+                (bricks[i]).active = false;
+                lives--;
+          }
       }
       else
       {
@@ -1190,7 +1257,7 @@ void initGL (GLFWwindow* window, int width, int height)
 	reshapeWindow (window, width, height);
 
     // Background color of the scene
-	glClearColor (0.3f, 0.3f, 0.3f, 0.0f); // R, G, B, A
+	glClearColor (0.2, 0.0, 0.2, 0); // R, G, B, A
 	glClearDepth (1.0f);
 
 	glEnable (GL_DEPTH_TEST);
@@ -1214,8 +1281,7 @@ int main (int argc, char** argv)
     double last_update_time = glfwGetTime(), current_time;
 
     srand(time(NULL));
-    init_bricks(); // Initialises vector with the bricks
-    init_mirrors(); // Inititalises mirrors at random angles
+    init_game();
 
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
