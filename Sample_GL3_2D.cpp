@@ -314,7 +314,7 @@ void init_game()
     init_mirrors(); // Inititalises mirrors at random angles
     gameOver = false;
     score = 0;
-    lives = 3;
+    lives = 9;
 }
 
 void init_bullet()
