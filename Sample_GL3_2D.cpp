@@ -218,7 +218,7 @@ float turretROT = 0.0;
 
 double last_shot_time = -1;
 double new_shot_time = glfwGetTime();
-const float BULLET_SPEED = 0.01;
+const float BULLET_SPEED = 0.05;
 typedef struct bullet {
   bool active; // true => draw; false => reinitialise
   float x, y;
