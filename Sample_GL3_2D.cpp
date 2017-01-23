@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 
+#include <ftgl.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -248,6 +250,9 @@ float PAN = 0.0;
 
 bool turret_hover, turret_drag, redBucket_hover, redBucket_drag, grnBucket_hover, grnBucket_drag, bullet_stream, pan_drag;
 
+bool PAUSE;
+float old_BRICK_SPEED;
+
 void collision_mirror(float xm, float ym, float am, int bullet_ind)
 {
     float slope = tan(am*M_PI/180.0f);
@@ -342,7 +347,6 @@ bool pan(int direction) // -1: left, 1: right
 
 void zoom(int direction) // -1: out, 1: in
 {
-    // cout << PAN << " " << ZOOM <<endl;
     if ((ZOOM + direction*0.1) >= 0.9)
         ZOOM += direction*0.1;
     if (fabs(ZOOM - 1) < 0.1) // to deal with floating point error
@@ -372,6 +376,7 @@ void zoom(int direction) // -1: out, 1: in
                     prev_PAN = PAN;
             }
     }
+    cout <<  "ZOOM: x" << ZOOM <<endl;
 }
 
 /* Executed when a regular key is pressed/released/held-down */
@@ -387,6 +392,15 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
                 break;
             case GLFW_KEY_P:
                 triangle_rot_status = !triangle_rot_status;
+                PAUSE = !PAUSE;
+                if (PAUSE)
+                {
+                    old_BRICK_SPEED = BRICK_SPEED;
+                    BRICK_SPEED = 0;
+                }
+                else
+                    BRICK_SPEED = old_BRICK_SPEED;
+                    
                 break;
             case GLFW_KEY_X:
                 // do something ..
