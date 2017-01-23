@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-#include <ftgl.h>
+// #include <ftgl.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
